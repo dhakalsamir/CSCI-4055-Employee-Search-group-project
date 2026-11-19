@@ -15,6 +15,7 @@ import javax.swing.JTextField;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JList;
+import javax.swing.ListSelectionModel;
 import javax.swing.JCheckBox;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -106,8 +107,10 @@ public class EmployeeSearchFrame extends JFrame {
 		lstProject = new JList<String>(new DefaultListModel<String>());
 		lstProject.setFont(new Font("Tahoma", Font.PLAIN, 12));
 		lstProject.setModel(project);
-		lstProject.setBounds(225, 84, 150, 42);
-		contentPane.add(lstProject);
+		lstProject.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		JScrollPane projectScrollPane = new JScrollPane(lstProject);
+		projectScrollPane.setBounds(225, 84, 150, 42);
+		contentPane.add(projectScrollPane);
 		
 		JCheckBox chckbxNotDept = new JCheckBox("Not");
 		chckbxNotDept.setBounds(71, 133, 59, 23);
@@ -118,10 +121,12 @@ public class EmployeeSearchFrame extends JFrame {
 		contentPane.add(chckbxNotProject);
 		
 		lstDepartment = new JList<String>(new DefaultListModel<String>());
-		lstDepartment.setBounds(36, 84, 172, 40);
-		contentPane.add(lstDepartment);
+		JScrollPane departmentScrollPane = new JScrollPane(lstDepartment);
+		departmentScrollPane.setBounds(36, 84, 172, 40);
+		contentPane.add(departmentScrollPane);
 		lstDepartment.setFont(new Font("Tahoma", Font.PLAIN, 12));
 		lstDepartment.setModel(department);
+		lstDepartment.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		
 		JLabel lblEmployee = new JLabel("Employee");
 		lblEmployee.setFont(new Font("Times New Roman", Font.BOLD, 12));
@@ -141,13 +146,18 @@ public class EmployeeSearchFrame extends JFrame {
 		btnClear.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				textAreaEmployee.setText("");
+				lstDepartment.clearSelection();
+				lstProject.clearSelection();
+				chckbxNotDept.setSelected(false);
+				chckbxNotProject.setSelected(false);
 			}
 		});
 		btnClear.setBounds(236, 276, 89, 23);
 		contentPane.add(btnClear);
 		
 		textAreaEmployee = new JTextArea();
-		textAreaEmployee.setBounds(36, 197, 339, 68);
-		contentPane.add(textAreaEmployee);
+		JScrollPane employeeScrollPane = new JScrollPane(textAreaEmployee);
+		employeeScrollPane.setBounds(36, 197, 339, 68);
+		contentPane.add(employeeScrollPane);
 	}
 }
