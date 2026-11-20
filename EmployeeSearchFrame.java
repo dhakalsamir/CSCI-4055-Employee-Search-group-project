@@ -7,6 +7,7 @@
 import java.awt.EventQueue;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -126,11 +127,7 @@ public class EmployeeSearchFrame extends JFrame {
 		contentPane.add(lblEmployee);
 		
 		JButton btnSearch = new JButton("Search");
-		btnSearch.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				textAreaEmployee.setText("John Smith\nFranklin Wong");
-			}
-		});
+		btnSearch.addActionListener(e -> searchEmployees(chckbxNotDept.isSelected(), chckbxNotProject.isSelected()));
 		btnSearch.setBounds(80, 276, 89, 23);
 		contentPane.add(btnSearch);
 		
@@ -155,22 +152,9 @@ public class EmployeeSearchFrame extends JFrame {
 
 	private void fillLists() {
 		String database = txtDatabase.getText().trim();
-		if (database.isEmpty()) {
-			showFillError("Enter a database name.");
-			return;
-		}
-
-		String user = System.getenv("EMPLOYEE_DB_USER");
-		String password = System.getenv("EMPLOYEE_DB_PASSWORD");
-		if (user == null || user.isBlank() || password == null) {
-			showFillError("Set EMPLOYEE_DB_USER and EMPLOYEE_DB_PASSWORD before starting the application.");
-			return;
-		}
-
-		String url = "jdbc:mariadb://127.0.0.1:3306/?sslMode=disable&connectTimeout=3000&socketTimeout=5000";
 		List<String> departments;
 		List<String> projects;
-		try (Connection connection = DriverManager.getConnection(url, user, password)) {
+		try (Connection connection = openConnection(database)) {
 			connection.setCatalog(database);
 			try (Statement statement = connection.createStatement()) {
 				departments = readNames(statement, "SELECT Dname FROM DEPARTMENT");
@@ -185,6 +169,61 @@ public class EmployeeSearchFrame extends JFrame {
 		department.addAll(departments);
 		project.clear();
 		project.addAll(projects);
+	}
+
+	private void searchEmployees(boolean notDepartment, boolean notProject) {
+		String database = txtDatabase.getText().trim();
+		textAreaEmployee.setText("");
+		try (Connection connection = openConnection(database)) {
+			connection.setCatalog(database);
+			List<Integer> departmentIds = readSelectedIds(connection, lstDepartment.getSelectedValuesList(),
+					"SELECT Dnumber FROM DEPARTMENT WHERE Dname = ?");
+			List<Integer> projectIds = readSelectedIds(connection, lstProject.getSelectedValuesList(),
+					"SELECT Pnumber FROM PROJECT WHERE Pname = ?");
+			List<String> employees = EmployeeSearch.search(connection, departmentIds, projectIds,
+					notDepartment, notProject);
+			textAreaEmployee.setText(String.join("\n", employees));
+		} catch (SQLException ex) {
+			JOptionPane.showMessageDialog(this, ex.getMessage(), "Search Error", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private static Connection openConnection(String database) throws SQLException {
+		if (database.isEmpty()) {
+			throw new SQLException("Enter a database name.");
+		}
+
+		String user = System.getenv("EMPLOYEE_DB_USER");
+		String password = System.getenv("EMPLOYEE_DB_PASSWORD");
+		if (user == null || user.isBlank() || password == null) {
+			throw new SQLException("Set EMPLOYEE_DB_USER and EMPLOYEE_DB_PASSWORD before starting the application.");
+		}
+
+		String url = "jdbc:mariadb://127.0.0.1:3306/?sslMode=disable&connectTimeout=3000&socketTimeout=5000";
+		return DriverManager.getConnection(url, user, password);
+	}
+
+	private static List<Integer> readSelectedIds(Connection connection, List<String> names, String sql)
+			throws SQLException {
+		List<Integer> ids = new ArrayList<>();
+		if (names.isEmpty()) {
+			return ids;
+		}
+
+		try (PreparedStatement statement = connection.prepareStatement(sql)) {
+			for (String name : names) {
+				statement.setString(1, name);
+				try (ResultSet rows = statement.executeQuery()) {
+					if (!rows.next()) {
+						throw new SQLException("Could not find \"" + name + "\". Click Fill to reload the lists.");
+					}
+					do {
+						ids.add(rows.getInt(1));
+					} while (rows.next());
+				}
+			}
+		}
+		return ids;
 	}
 
 	private static List<String> readNames(Statement statement, String sql) throws SQLException {
