@@ -5,6 +5,13 @@
  */
 
 import java.awt.EventQueue;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -15,6 +22,7 @@ import javax.swing.JTextField;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.JCheckBox;
 import java.awt.event.ActionListener;
@@ -72,23 +80,7 @@ public class EmployeeSearchFrame extends JFrame {
 		txtDatabase.setColumns(10);
 		
 		JButton btnDBFill = new JButton("Fill");
-		/**
-		 * The btnDBFill should fill the department and project JList with the 
-		 * departments and projects from your entered database name.
-		 */
-		btnDBFill.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String[] dept = {"Headquarters", "Reorganization"};	
-				for(int i = 0; i < dept.length; i++) {
-					department.addElement(dept[i]);
-				}
-				String[] prj = {"ProdoctX", "ProductY", "ProductZ"};
-				for(int j = 0; j < prj.length; j++) {
-					project.addElement(prj[j]);
-				}
-				
-			}
-		});
+		btnDBFill.addActionListener(e -> fillLists());
 		
 		btnDBFill.setFont(new Font("Times New Roman", Font.BOLD, 12));
 		btnDBFill.setBounds(307, 19, 68, 23);
@@ -159,5 +151,53 @@ public class EmployeeSearchFrame extends JFrame {
 		JScrollPane employeeScrollPane = new JScrollPane(textAreaEmployee);
 		employeeScrollPane.setBounds(36, 197, 339, 68);
 		contentPane.add(employeeScrollPane);
+	}
+
+	private void fillLists() {
+		String database = txtDatabase.getText().trim();
+		if (database.isEmpty()) {
+			showFillError("Enter a database name.");
+			return;
+		}
+
+		String user = System.getenv("EMPLOYEE_DB_USER");
+		String password = System.getenv("EMPLOYEE_DB_PASSWORD");
+		if (user == null || user.isBlank() || password == null) {
+			showFillError("Set EMPLOYEE_DB_USER and EMPLOYEE_DB_PASSWORD before starting the application.");
+			return;
+		}
+
+		String url = "jdbc:mariadb://127.0.0.1:3306/?sslMode=disable&connectTimeout=3000&socketTimeout=5000";
+		List<String> departments;
+		List<String> projects;
+		try (Connection connection = DriverManager.getConnection(url, user, password)) {
+			connection.setCatalog(database);
+			try (Statement statement = connection.createStatement()) {
+				departments = readNames(statement, "SELECT Dname FROM DEPARTMENT");
+				projects = readNames(statement, "SELECT Pname FROM PROJECT");
+			}
+		} catch (SQLException ex) {
+			showFillError("Could not load departments and projects from " + database + ".\n" + ex.getMessage());
+			return;
+		}
+
+		department.clear();
+		department.addAll(departments);
+		project.clear();
+		project.addAll(projects);
+	}
+
+	private static List<String> readNames(Statement statement, String sql) throws SQLException {
+		List<String> names = new ArrayList<>();
+		try (ResultSet rows = statement.executeQuery(sql)) {
+			while (rows.next()) {
+				names.add(rows.getString(1));
+			}
+		}
+		return names;
+	}
+
+	private void showFillError(String message) {
+		JOptionPane.showMessageDialog(this, message, "Fill Error", JOptionPane.ERROR_MESSAGE);
 	}
 }
