@@ -1,5 +1,11 @@
 # Employee Search — Database Project
 
+## Group Members
+
+- Samir Dhakal
+- Shreya Sitoula
+- Tashi Sherpa
+
 ## Overview
 
 This is a Java Swing application developed for the CSCI 4055 Database Project.
