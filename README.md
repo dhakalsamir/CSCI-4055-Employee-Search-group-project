@@ -52,4 +52,9 @@ Our group cloned the repository and modified the existing Java source code to im
 5. Configure database credentials.
 6. Compile and run the Java application.
 
+## GitHub Repository
+
+Project repository:
+https://github.com/dhakalsamir/CSCI-4055-Employee-Search-group-project
+
 See `DOCUMENTATION.md` for more information.

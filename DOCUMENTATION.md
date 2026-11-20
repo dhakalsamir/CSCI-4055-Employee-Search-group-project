@@ -89,3 +89,8 @@ Git and GitHub were used for group collaboration. Changes were developed on bran
 ## 8. Conclusion
 
 The application implements the required database loading, employee searching, filtering, clearing, scrolling, and error-handling functionality.
+
+## GitHub Repository
+
+Project repository:
+https://github.com/dhakalsamir/CSCI-4055-Employee-Search-group-project
