@@ -28,7 +28,6 @@ The project was developed by a group of three students using the starter project
 - Git and GitHub
 - Java Development Kit (JDK)
 - Terminal
-- Codex (development assistance)
 
 ## GUI Development
 

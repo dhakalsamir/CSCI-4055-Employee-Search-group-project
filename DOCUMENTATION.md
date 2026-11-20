@@ -17,7 +17,6 @@ Tools and technologies used:
 - Java Development Kit (JDK)
 - Terminal
 - Git and GitHub
-- Codex for development assistance
 
 ## 3. Database Setup
 
